@@ -26,6 +26,9 @@ public class LeadReiterationHelper {
 
     public static void handleReiterationTasks(Map<Id,Lead> newLeads, Map<Id,Lead> mapBaseLeads){
         fillRequiredTaskFields(newLeads, mapBaseLeads);
+
+        markReiteracaoTasksAsCompleted(newLeads.keySet());
+
         Map<Id, List<Task>> reiterationTaskMap = getReiteracaoTaskMap(newLeads.keySet());
         List<Task> reiterationTasks = new List<Task>();
 
@@ -36,19 +39,34 @@ public class LeadReiterationHelper {
                     WhoId = iLead.Id,
                     OwnerId = iLead.OwnerId,
                     Subject = 'Reiteração',
-                    ActivityDate = Date.today().addDays(1)
+                    ActivityDate = Date.today().addDays(1),
+                    DataHoraInteracao__c = System.now(),
+                    EmpreendimentoDeInteresse__c = iLead.EmpreendimentoDeInteresse__c,
+                    MidiaAtual__c = iLead.MidiaAtual__c,
+                    OrigemLead__c = iLead.MidiaDeOrigem__c,
+                    LeadSource__c = iLead.LeadSource,
+                    Canal__c = iLead.Canal__c
                 ) 
             );
         }
 
         insert reiterationTasks;
+
+        incrementReiterationCounter(newLeads.keySet());
+
     }
+
     public static void fillRequiredTaskFields(Map<Id,Lead> newLeads, Map<Id,Lead> mapBaseLeads) {
         for (Lead iLead : newLeads.values()) {
             iLead.OwnerId = iLead.OwnerId ?? mapBaseLeads.get(iLead.Id).OwnerId;
             iLead.Email = iLead.Email ?? mapBaseLeads.get(iLead.Id).Email;
             iLead.LastName = iLead.LastName ?? mapBaseLeads.get(iLead.Id).LastName;
             iLead.LeadSource = iLead.LeadSource ?? mapBaseLeads.get(iLead.Id).LeadSource;
+            iLead.MidiaDeOrigem__c = iLead.MidiaDeOrigem__c ?? mapBaseLeads.get(iLead.Id).MidiaDeOrigem__c;
+            iLead.MidiaAtual__c = iLead.MidiaAtual__c ?? mapBaseLeads.get(iLead.Id).MidiaAtual__c;
+            iLead.EmpreendimentoDeInteresse__c = iLead.EmpreendimentoDeInteresse__c ?? mapBaseLeads.get(iLead.Id).EmpreendimentoDeInteresse__c;
+            iLead.Canal__c = iLead.Canal__c ?? mapBaseLeads.get(iLead.Id).Canal__c;
+
         }
     }
 
@@ -104,5 +122,34 @@ public class LeadReiterationHelper {
         }
 
         return filteredLeadMap;
+    }
+
+    public static void markReiteracaoTasksAsCompleted(Set<Id> leadIds) {
+        List<Task> tasksToUpdate = TaskSelect.getTasksReiteracaoByWhoId(
+            new Set<String>{'Id', 'Status'}, 
+            leadIds
+        );
+        
+        for (Task task : tasksToUpdate) {
+            if (task.Status != 'Completed') {
+                task.Status = 'Completed';
+            }
+        }
+    
+        if (!tasksToUpdate.isEmpty()) {
+            update tasksToUpdate;
+        }
+    }
+
+    public static void incrementReiterationCounter(Set<Id> leadIds) {
+        List<Lead> leadsToUpdate = [SELECT Id, QuantidadeDeReiteracoes__c FROM Lead WHERE Id IN :leadIds];
+
+        for (Lead lead : leadsToUpdate) {
+            lead.QuantidadeDeReiteracoes__c = (lead.QuantidadeDeReiteracoes__c == null ? 0 : lead.QuantidadeDeReiteracoes__c) + 1;
+        }
+
+        if (!leadsToUpdate.isEmpty()) {
+            update leadsToUpdate;
+        }
     }
 }
