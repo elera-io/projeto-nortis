@@ -1,15 +1,43 @@
 public without sharing class SLAService {
 
-    private static final List<RegraSLA__c> SLA_RULES = RegraSLASelector.getLeadSLARules();
-
+    public static final String REGRA_SLA_NORTIS_RECORD_TYPE_DEVELOPER_NAME = 'RegraSLANortis';
+    public static final String REGRA_SLA_VIBRA_RECORD_TYPE_DEVELOPER_NAME = 'RegraSLANortis';
+    public static final List<RegraSLA__c> SLA_RULES = RegraSLASelector.getLeadSLARules();
     private static final List<Group> LEAD_QUEUES = GroupSelector.getLeadQueues();
 
     public static void createLeadSLAs(List<Lead> newLeads) {
-        
+        if (newLeads.isEmpty()) {
+            return;
+        }
+
+        List<SLA__c> slasToCreate = new List<SLA__c>();
+
+        for (Lead lead : newLeads) {
+            
+        }
     }
 
     public static void updateLeadSLAs(List<Lead> newLeads, Map<Id, Lead> oldLeadsMap) {
         
+    }
+
+    public static SLA__c retriveLeadRequiredSLA(Lead lead) {
+        if (lead == null) {
+            return null;
+        }
+
+        for (RegraSLA__c slaRule : SLA_RULES) {
+            String leadEntrerprise = lead.RecordType.DeveloperName.contains('Nortis') ? 'Nortis' : 'Vibra';
+            String slaRuleEnterprise = slaRule.RecordType.DeveloperName.contains('Nortis') ? 'Nortis' : 'Vibra';
+
+            if (lead.Status == slaRule.FaseAplicacao__c && leadEntrerprise == slaRuleEnterprise) {
+                return new SLA__c(
+                    Lead__c = lead.Id
+                );
+            }
+        }
+
+        return null;
     }
 
     public static void handleLeadSLAs() {
