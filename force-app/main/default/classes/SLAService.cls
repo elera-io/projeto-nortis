@@ -1,9 +1,23 @@
 public without sharing class SLAService {
 
+    private static final List<RegraSLA__c> SLA_RULES = RegraSLASelector.getLeadSLARules();
+
     private static final List<Group> LEAD_QUEUES = GroupSelector.getLeadQueues();
+
+    public static void createLeadSLAs(List<Lead> newLeads) {
+        
+    }
+
+    public static void updateLeadSLAs(List<Lead> newLeads, Map<Id, Lead> oldLeadsMap) {
+        
+    }
 
     public static void handleLeadSLAs() {
         List<SLA__c> leadsDueSLAs = SLASelector.getDueSLAsOfLeads();
+
+        if (leadsDueSLAs.isEmpty()) {
+            return;
+        }
 
         executeDueLeadSLAs(leadsDueSLAs);
     }
