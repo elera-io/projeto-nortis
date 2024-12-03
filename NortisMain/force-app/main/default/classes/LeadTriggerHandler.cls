@@ -8,22 +8,29 @@ public class LeadTriggerHandler {
         // Adicione a lógica específica para o evento 'before update' aqui, se necessário
     }
     
-    public static void handleAfterInsert(List<Lead> newLeads) {
+	public static void handleAfterInsert(List<Lead> newLeads) { 
         List<Lead> credenciamentoLeads = new List<Lead>();
-
+        List<Lead> leadsWithCampaignAssignment = new List<Lead>();
+    
         // Cria um mapa para armazenar o DeveloperName do RecordType para cada Lead
         Map<Id, String> leadIdToRecordTypeMap = new Map<Id, String>();
-
+    
         // Consulta o DeveloperName do RecordType para cada Lead inserido
-        List<Lead> leadsWithRecordType = [SELECT Id, RecordType.DeveloperName FROM Lead WHERE Id IN :newLeads];
+        List<Lead> leadsWithRecordType = [
+            SELECT Id, RecordType.DeveloperName, Campanha__c 
+            FROM Lead 
+            WHERE Id IN :newLeads
+        ];
+    
         for (Lead lead : leadsWithRecordType) {
             leadIdToRecordTypeMap.put(lead.Id, lead.RecordType.DeveloperName);
         }
-
-        // Filtra apenas os leads de credenciamento usando os valores obtidos na consulta
+    
+        // Filtra leads por tipo de registro e distribui conforme a lógica de negócio
         for (Lead lead : newLeads) {
             String developerName = leadIdToRecordTypeMap.get(lead.Id);
-
+    
+            // Leads de credenciamento
             if (developerName == 'ParceiroVibra' || 
                 developerName == 'ParceiroNortis' || 
                 developerName == 'ImobiliariaVibra' || 
@@ -32,17 +39,28 @@ public class LeadTriggerHandler {
                 developerName == 'CorretorAssociadoVibra') {
                 credenciamentoLeads.add(lead);
             }
+    
+            // Leads válidos para vinculação de campanhas
+            if ((developerName == 'LeadNortis' || developerName == 'LeadVibra') && !String.isBlank(lead.Campanha__c)) {
+                leadsWithCampaignAssignment.add(lead);
+            }
         }
-
-        // Processa apenas os leads de credenciamento
+    
+        // Processa leads de credenciamento
         if (!credenciamentoLeads.isEmpty()) {
             LeadCredenciamentoHandler.processCredenciamentoLeads(credenciamentoLeads);
         }
-
+    
+        // Processa leads com atribuição de campanhas
+        if (!leadsWithCampaignAssignment.isEmpty()) {
+            CampaignService.handleCampaignAssignment(leadsWithCampaignAssignment);
+        }
+    
+        // Lida com iterações específicas de leads
         LeadReiterationHelper.handleReiteration(newLeads);
-        
-        // Aqui tratar lógicas específicas para outros tipos de leads no futuro
     }
+
+
     
     public static void handleAfterUpdate(List<Lead> updatedLeads, Map<Id, Lead> oldLeadMap) {
         List<Lead> leadsWithDocumentationIssues = new List<Lead>();

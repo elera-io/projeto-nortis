@@ -43,7 +43,7 @@ public class LeadReiterationHelper {
                     DataHoraInteracao__c = System.now(),
                     EmpreendimentoDeInteresse__c = iLead.EmpreendimentoDeInteresse__c,
                     MidiaAtual__c = iLead.MidiaAtual__c,
-                    OrigemLead__c = iLead.MidiaDeOrigem__c,
+                    OrigemLead__c = iLead.MidiaOrigem__c,
                     LeadSource__c = iLead.LeadSource,
                     Canal__c = iLead.Canal__c
                 ) 
@@ -62,7 +62,7 @@ public class LeadReiterationHelper {
             iLead.Email = iLead.Email ?? mapBaseLeads.get(iLead.Id).Email;
             iLead.LastName = iLead.LastName ?? mapBaseLeads.get(iLead.Id).LastName;
             iLead.LeadSource = iLead.LeadSource ?? mapBaseLeads.get(iLead.Id).LeadSource;
-            iLead.MidiaDeOrigem__c = iLead.MidiaDeOrigem__c ?? mapBaseLeads.get(iLead.Id).MidiaDeOrigem__c;
+            iLead.MidiaOrigem__c = iLead.MidiaOrigem__c ?? mapBaseLeads.get(iLead.Id).MidiaOrigem__c;
             iLead.MidiaAtual__c = iLead.MidiaAtual__c ?? mapBaseLeads.get(iLead.Id).MidiaAtual__c;
             iLead.EmpreendimentoDeInteresse__c = iLead.EmpreendimentoDeInteresse__c ?? mapBaseLeads.get(iLead.Id).EmpreendimentoDeInteresse__c;
             iLead.Canal__c = iLead.Canal__c ?? mapBaseLeads.get(iLead.Id).Canal__c;
