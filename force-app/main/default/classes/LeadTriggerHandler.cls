@@ -58,6 +58,8 @@ public class LeadTriggerHandler {
     
         // Lida com iterações específicas de leads
         LeadReiterationHelper.handleReiteration(newLeads);
+
+        // SLAService.createLeadSLAs(newLeads);
     }
 
 
