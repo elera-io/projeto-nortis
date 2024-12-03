@@ -48,6 +48,60 @@ public without sharing class SLAService {
         createLeadSLAs(leadsWithUpdatedStatus.values());
     }
 
+    public static void restartLeadSLAByEvent(List<Event> events) {
+        if (events.isEmpty()) {
+            return;
+        }
+
+        Map<Id, DateTime> leadIdsWithEventEndDateTimes = new Map<Id, DateTime>();
+        
+        for (Event event : events) {
+            if (event.WhoId != null && event.WhoId.getSObjectType() == Schema.Lead.SObjectType) {
+                leadIdsWithEventEndDateTimes.put(event.WhoId, event.EndDateTime);
+            }
+        }
+
+        if (leadIdsWithEventEndDateTimes.isEmpty()) {
+            return;
+        }
+
+        restartLeadSLA(leadIdsWithEventEndDateTimes);
+    }
+
+    public static void restartLeadSLAByTask(List<Task> tasks) {
+        if (tasks.isEmpty()) {
+            return;
+        }
+
+        Map<Id, DateTime> leadIdsWithTasksEndDateTimes = new Map<Id, DateTime>();
+        
+        for (Task task : tasks) {
+            if (task.WhoId != null && task.WhoId.getSObjectType() == Schema.Lead.SObjectType) {
+                leadIdsWithTasksEndDateTimes.put(task.WhoId, task.ActivityDate);
+            }
+        }
+
+        if (leadIdsWithTasksEndDateTimes.isEmpty()) {
+            return;
+        }
+
+        restartLeadSLA(leadIdsWithTasksEndDateTimes);
+    }
+
+    private static void restartLeadSLA(Map<Id, DateTime> leadIdsWithEndDateTimes) {
+        if (leadIdsWithEndDateTimes.isEmpty()) {
+            return;
+        }
+
+        List<SLA__c> leadSLAs = SLASelector.getSLAsByLeadIds(leadIdsWithEndDateTimes.keySet());
+
+        for (SLA__c sla : leadSLAs) {
+            sla.DataHoraVencimento__c = leadIdsWithEndDateTimes.get(sla.Lead__c).addMinutes((Integer) sla.TempoLimitePerdaMinutos__c);
+        }
+
+        update leadSLAs;
+    }
+
     public static SLA__c retriveLeadRequiredSLA(Lead lead) {
         if (lead == null) {
             return null;
