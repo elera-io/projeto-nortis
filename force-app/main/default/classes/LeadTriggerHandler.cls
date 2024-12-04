@@ -9,6 +9,8 @@ public class LeadTriggerHandler {
     }
     
 	public static void handleAfterInsert(List<Lead> newLeads) { 
+        SLAService.createLeadSLAs(newLeads);
+        
         List<Lead> credenciamentoLeads = new List<Lead>();
         List<Lead> leadsWithCampaignAssignment = new List<Lead>();
     
@@ -58,13 +60,13 @@ public class LeadTriggerHandler {
     
         // Lida com iterações específicas de leads
         LeadReiterationHelper.handleReiteration(newLeads);
-
-        // SLAService.createLeadSLAs(newLeads);
     }
 
 
     
     public static void handleAfterUpdate(List<Lead> updatedLeads, Map<Id, Lead> oldLeadMap) {
+        SLAService.updateLeadSLAs(updatedLeads, oldLeadMap);
+
         List<Lead> leadsWithDocumentationIssues = new List<Lead>();
 
         for (Lead lead : updatedLeads) {

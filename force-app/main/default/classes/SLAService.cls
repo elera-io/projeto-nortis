@@ -15,7 +15,7 @@ public without sharing class SLAService {
         List<SLA__c> slasToCreate = new List<SLA__c>();
 
         for (Lead lead : newLeads) {
-            SLA__c leadSLA = retriveLeadRequiredSLA(lead);
+            SLA__c leadSLA = buildLeadRequiredSLA(lead);
 
             if (leadSLA != null) {
                 slasToCreate.add(leadSLA);
@@ -44,11 +44,11 @@ public without sharing class SLAService {
             return;
         }
 
-        delete [SELECT Id FROM SLA__c WHERE Lead__c IN :leadsWithUpdatedStatus.keySet()];
+        delete [SELECT Id FROM SLA__c WHERE Lead__c IN :leadsWithUpdatedStatus.keySet() AND Executado__c = false];
         createLeadSLAs(leadsWithUpdatedStatus.values());
     }
 
-    public static void restartLeadSLAByEvent(List<Event> events) {
+    public static void restartLeadSLAWithEvent(List<Event> events) {
         if (events.isEmpty()) {
             return;
         }
@@ -68,7 +68,7 @@ public without sharing class SLAService {
         restartLeadSLA(leadIdsWithEventEndDateTimes);
     }
 
-    public static void restartLeadSLAByTask(List<Task> tasks) {
+    public static void restartLeadSLAWithTask(List<Task> tasks) {
         if (tasks.isEmpty()) {
             return;
         }
@@ -93,7 +93,7 @@ public without sharing class SLAService {
             return;
         }
 
-        List<SLA__c> leadSLAs = SLASelector.getSLAsByLeadIds(leadIdsWithEndDateTimes.keySet());
+        List<SLA__c> leadSLAs = SLASelector.getDueSLAsByLeadIds(leadIdsWithEndDateTimes.keySet());
 
         for (SLA__c sla : leadSLAs) {
             sla.DataHoraVencimento__c = leadIdsWithEndDateTimes.get(sla.Lead__c).addMinutes((Integer) sla.TempoLimitePerdaMinutos__c);
@@ -102,12 +102,13 @@ public without sharing class SLAService {
         update leadSLAs;
     }
 
-    public static SLA__c retriveLeadRequiredSLA(Lead lead) {
-        if (lead == null) {
+    public static SLA__c buildLeadRequiredSLA(Lead lead) {
+        if (lead == null || !Schema.SObjectType.Lead.getRecordTypeInfosById().get(lead.RecordTypeId).getDeveloperName().contains('Lead')) {
             return null;
         }
 
         for (RegraSLA__c slaRule : SLA_RULES) {
+
             String leadEntrerprise = Schema.SObjectType.Lead.getRecordTypeInfosById().get(lead.RecordTypeId).getDeveloperName().contains('Nortis') ? 'Nortis' : 'Vibra';
             String slaRuleEnterprise = slaRule.RecordType.DeveloperName.contains('Nortis') ? 'Nortis' : 'Vibra';
 
@@ -158,17 +159,17 @@ public without sharing class SLAService {
             leadsToUpdate.add(new Lead(
                 Id = sla.Lead__c,
                 Status = sla.FaseRedirecionamento__c,
-                OwnerId = getLeadQueueByName(sla.FilaRedirecionamento__c).Id
+                OwnerId = getLeadQueueByDeveloperName(sla.FilaRedirecionamento__c).Id
             ));
 
             sla.Executado__c = true;
         }
 
-        update leadsToUpdate;
         update dueSLAs;
+        update leadsToUpdate;
     }
 
-    private static Group getLeadQueueByName(String name) {
+    private static Group getLeadQueueByDeveloperName(String name) {
         for (Group queue : LEAD_QUEUES) {
             if (queue.DeveloperName == name) {
                 return queue;
