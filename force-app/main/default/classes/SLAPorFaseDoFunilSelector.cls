@@ -1,12 +1,12 @@
-public without sharing class RegraSLASelector {
+public without sharing class SLAPorFaseDoFunilSelector {
 
-    public static List<RegraSLA__c> getLeadSLARules() {
+    public static List<SLAPorFaseDoFunil__c> getLeadSLARules() {
         return [
             SELECT
                 Id, Name, FaseRedirecionamento__c, FilaRedirecionamento__c, FaseDoFunil__c,
                 LimitePercentualAmarelo__c, LimitePercentualVerde__c, Objeto__c, TempoLimitePerdaMinutos__c,
                 RecordType.DeveloperName
-            FROM RegraSLA__c
+            FROM SLAPorFaseDoFunil__c
             WHERE Objeto__c = 'Lead'
         ];
     }
