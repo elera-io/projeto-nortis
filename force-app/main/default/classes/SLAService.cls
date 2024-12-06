@@ -4,7 +4,7 @@ public without sharing class SLAService {
     public static final String SLA_NORTIS_RECORD_TYPE_DEVELOPER_NAME = 'SLANortis';
     public static final String REGRA_SLA_VIBRA_RECORD_TYPE_DEVELOPER_NAME = 'RegraSLAVibra';
     public static final String SLA_VIBRA_RECORD_TYPE_DEVELOPER_NAME = 'SLAVibra';
-    public static final List<SLAPorFaseDoFunil__c> SLA_RULES = SLAPorFaseDoFunilSelector.getLeadSLARules();
+    public static final List<SLAPorFaseDoFunil__c> SLA_PER_FUNNEL_PHASE = SLAPorFaseDoFunilSelector.getLeadSLAPerFunnelPhase();
     private static final List<Group> LEAD_QUEUES = GroupSelector.getLeadQueues();
 
     public static void createLeadSLAs(List<Lead> newLeads) {
@@ -155,7 +155,7 @@ public without sharing class SLAService {
             return null;
         }
 
-        for (SLAPorFaseDoFunil__c slaRule : SLA_RULES) {
+        for (SLAPorFaseDoFunil__c slaRule : SLA_PER_FUNNEL_PHASE) {
 
             String leadEntrerprise = Schema.SObjectType.Lead.getRecordTypeInfosById().get(lead.RecordTypeId).getDeveloperName().contains('Nortis') ? 'Nortis' : 'Vibra';
             String slaRuleEnterprise = slaRule.RecordType.DeveloperName.contains('Nortis') ? 'Nortis' : 'Vibra';

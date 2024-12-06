@@ -1,6 +1,6 @@
 public without sharing class SLAPorFaseDoFunilSelector {
 
-    public static List<SLAPorFaseDoFunil__c> getLeadSLARules() {
+    public static List<SLAPorFaseDoFunil__c> getLeadSLAPerFunnelPhase() {
         return [
             SELECT
                 Id, Name, FaseRedirecionamento__c, FilaRedirecionamento__c, FaseDoFunil__c,
