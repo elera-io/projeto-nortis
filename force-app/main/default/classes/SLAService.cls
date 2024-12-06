@@ -226,4 +226,20 @@ public without sharing class SLAService {
 
         return null;
     }
+
+    public static void assignNewSLAsToLead(List<SLA__c> newSLAs) {
+
+        List<Lead> leadsToUpdate = new List<Lead>();
+        
+        for (SLA__c sla : newSLAs) {
+            if (sla.Lead__c != null && sla.Executado__c == false) {
+                leadsToUpdate.add(new Lead(
+                    Id = sla.Lead__c,
+                    SLAAtivo__c = sla.Id
+                ));
+            }
+        }
+
+        update leadsToUpdate;
+    }
 }
