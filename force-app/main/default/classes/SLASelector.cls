@@ -23,4 +23,15 @@ public without sharing class SLASelector {
                 AND Lead__c IN :leadIds
         ];
     } 
+
+    public static List<SLA__c> getCurrentSLAsByLeadIds(Set<Id> leadIds) {
+        return [
+            SELECT Id, DataHoraVencimento__c, FaseRedirecionamento__c, FilaRedirecionamento__c, 
+                Lead__c, TempoLimitePerdaMinutos__c, LimitePercentualAmarelo__c, LimitePercentualVerde__c,
+                Lead__r.RecordType.DeveloperName, Objeto__c
+            FROM SLA__c
+            WHERE Executado__c = false
+                AND Lead__c IN :leadIds
+        ];
+    } 
 }

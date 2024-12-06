@@ -48,7 +48,7 @@ public without sharing class SLAService {
         createLeadSLAs(leadsWithUpdatedStatus.values());
     }
 
-    public static void restartLeadSLAWithEvent(List<Event> events) {
+    public static void restartLeadSLAWithEvents(List<Event> events) {
         if (events.isEmpty()) {
             return;
         }
@@ -68,7 +68,27 @@ public without sharing class SLAService {
         restartLeadSLA(leadIdsWithEventEndDateTimes);
     }
 
-    public static void restartLeadSLAWithTask(List<Task> tasks) {
+    public static void restartLeadSLAWithEvents(List<Event> newEvents, Map<Id, Event> oldEventsMap) {
+        if (newEvents.isEmpty() || oldEventsMap.isEmpty()) {
+            return;
+        }
+
+        List<Event> eventsWithModifiedEndDate = new List<Event>();
+        for (Event event : newEvents) {
+            Event oldEvent = oldEventsMap.get(event.Id);
+            if (event.EndDateTime != oldEvent.EndDateTime) {
+                eventsWithModifiedEndDate.add(event);
+            }
+        }
+
+        if (eventsWithModifiedEndDate.isEmpty()) {
+            return;
+        }
+
+        restartLeadSLAWithEvents(eventsWithModifiedEndDate);
+    }
+
+    public static void restartLeadSLAWithTasks(List<Task> tasks) {
         if (tasks.isEmpty()) {
             return;
         }
@@ -77,7 +97,11 @@ public without sharing class SLAService {
         
         for (Task task : tasks) {
             if (task.WhoId != null && task.WhoId.getSObjectType() == Schema.Lead.SObjectType) {
-                leadIdsWithTasksEndDateTimes.put(task.WhoId, task.ActivityDate);
+                DateTime taskDateTime = task.ActivityDate != null 
+                    ? DateTime.newInstance(task.ActivityDate, Time.newInstance(23, 59, 59, 0))
+                    : System.now();
+
+                leadIdsWithTasksEndDateTimes.put(task.WhoId, taskDateTime);
             }
         }
 
@@ -85,7 +109,29 @@ public without sharing class SLAService {
             return;
         }
 
+        System.debug(leadIdsWithTasksEndDateTimes);
+
         restartLeadSLA(leadIdsWithTasksEndDateTimes);
+    }
+
+    public static void restartLeadSLAWithTasks(List<Task> newTasks, Map<Id, Task> oldTasksMap) {
+        if (newTasks.isEmpty() || oldTasksMap.isEmpty()) {
+            return;
+        }
+
+        List<Task> tasksWithModifiedDueDate = new List<Task>();
+        for (Task task : newTasks) {
+            Task oldTask = oldTasksMap.get(task.Id);
+            if (task.ActivityDate != oldTask.ActivityDate) {
+                tasksWithModifiedDueDate.add(task);
+            }
+        }
+
+        if (tasksWithModifiedDueDate.isEmpty()) {
+            return;
+            }
+
+        restartLeadSLAWithTasks(tasksWithModifiedDueDate);
     }
 
     private static void restartLeadSLA(Map<Id, DateTime> leadIdsWithEndDateTimes) {
@@ -93,11 +139,13 @@ public without sharing class SLAService {
             return;
         }
 
-        List<SLA__c> leadSLAs = SLASelector.getDueSLAsByLeadIds(leadIdsWithEndDateTimes.keySet());
+        List<SLA__c> leadSLAs = SLASelector.getCurrentSLAsByLeadIds(leadIdsWithEndDateTimes.keySet());
 
         for (SLA__c sla : leadSLAs) {
             sla.DataHoraVencimento__c = leadIdsWithEndDateTimes.get(sla.Lead__c).addMinutes((Integer) sla.TempoLimitePerdaMinutos__c);
         }
+
+        System.debug(leadSLAs);
 
         update leadSLAs;
     }
@@ -112,14 +160,14 @@ public without sharing class SLAService {
             String leadEntrerprise = Schema.SObjectType.Lead.getRecordTypeInfosById().get(lead.RecordTypeId).getDeveloperName().contains('Nortis') ? 'Nortis' : 'Vibra';
             String slaRuleEnterprise = slaRule.RecordType.DeveloperName.contains('Nortis') ? 'Nortis' : 'Vibra';
 
-            if (lead.Status == slaRule.FaseAplicacao__c && leadEntrerprise == slaRuleEnterprise) {
+            if (lead.Status == slaRule.FaseDoFunil__c && leadEntrerprise == slaRuleEnterprise) {
                 return new SLA__c(
                     Lead__c = lead.Id,
                     DataHoraVencimento__c = System.now().addMinutes((Integer) slaRule.TempoLimitePerdaMinutos__c),
                     FaseRedirecionamento__c = slaRule.FaseRedirecionamento__c,
                     FilaRedirecionamento__c = slaRule.FilaRedirecionamento__c,
                     TempoLimitePerdaMinutos__c = slaRule.TempoLimitePerdaMinutos__c,
-                    FaseAplicacao__c = slaRule.FaseAplicacao__c,
+                    FaseDoFunil__c = slaRule.FaseDoFunil__c,
                     LimitePercentualAmarelo__c = slaRule.LimitePercentualAmarelo__c,
                     LimitePercentualVerde__c = slaRule.LimitePercentualVerde__c,
                     Objeto__c = slaRule.Objeto__c,
