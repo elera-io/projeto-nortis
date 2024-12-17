@@ -4,9 +4,9 @@ public without sharing class SLAScheduler implements Queueable {
     public void execute(QueueableContext qc) {
 
         try {
-            SLAService.handleLeadSLAs();
+            SLAService.handleLeadSLAsNotifications();
         } catch (Exception e) {
-            System.debug('Um erro ocorreu durante o processamento da SLA (' + e.getTypeName() + '): ' + e.getMessage() + ' (' + e.getStackTraceString() + ')');
+            System.debug('Um erro ocorreu durante as notificações do SLA (' + e.getTypeName() + '): ' + e.getMessage() + ' (' + e.getStackTraceString() + ')');
         } finally {
             System.enqueueJob(new SLAScheduler(), DELAY_MINUTES);
         }

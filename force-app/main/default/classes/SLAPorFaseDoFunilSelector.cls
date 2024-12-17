@@ -8,6 +8,7 @@ public without sharing class SLAPorFaseDoFunilSelector {
                 RecordType.DeveloperName
             FROM SLAPorFaseDoFunil__c
             WHERE Objeto__c = 'Lead'
+                AND Ativo__c = true
         ];
     }
 
