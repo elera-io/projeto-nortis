@@ -151,7 +151,7 @@ public without sharing class SLAService {
     }
 
     public static SLA__c buildLeadRequiredSLA(Lead lead) {
-        if (lead == null || !Schema.SObjectType.Lead.getRecordTypeInfosById().get(lead.RecordTypeId).getDeveloperName().contains('Lead')) {
+        if (lead == null || lead.RecordTypeId == null || !Schema.SObjectType.Lead.getRecordTypeInfosById().get(lead.RecordTypeId).getDeveloperName().contains('Lead')) {
             return null;
         }
 
@@ -207,7 +207,8 @@ public without sharing class SLAService {
             leadsToUpdate.add(new Lead(
                 Id = sla.Lead__c,
                 Status = sla.FaseRedirecionamento__c,
-                OwnerId = getLeadQueueByDeveloperName(sla.FilaRedirecionamento__c).Id
+                OwnerId = getLeadQueueByDeveloperName(sla.FilaRedirecionamento__c).Id,
+                SLAAtivo__c = null
             ));
 
             sla.Executado__c = true;
