@@ -3,24 +3,26 @@ global class LeadRequestDTO {
 	global String nome;  // Obrigatório
 	global String telefone; // Obrigatório
 	global String email; // Obrigatório
+    global String tipo; // Obrigatório
 	global String empreendimento_interesse;
-	global String midiaOrigem;
-	global String origemMidia; // Duplicado?
+	global String midia;
 	global String canal;
 	global String campanha;
-	global String conjuntoDeAnuncio;
+	global String conjunto_anuncio;
 	global String anuncio;
 	global String resumo_lead;
 	global List<TrascricaoDialogoDTO> transcricao_dialogo;
 
     public static String getValidationErrorMessage(LeadRequestDTO request) {
-        if (String.isBlank(request.nome) || String.isBlank(request.telefone) || String.isBlank(request.email)) {
-            return 'Verifique se todos os campos obrigatórios estão preenchidos: nome, telefone, email';
-
-        } else if (!String.isBlank(request.empreendimento_interesse) && [SELECT COUNT() FROM Empreendimento__c WHERE CodigoSistemaExterno__c = :request.empreendimento_interesse] == 0) {
+        if (String.isBlank(request.nome) || String.isBlank(request.telefone) || String.isBlank(request.email) || String.isBlank(request.tipo)) {
+            return 'Verifique se todos os campos obrigatórios estão preenchidos: nome, telefone, email, tipo';
+        }
+        
+        if (!String.isBlank(request.empreendimento_interesse) && [SELECT COUNT() FROM Empreendimento__c WHERE CodigoSistemaExterno__c = :request.empreendimento_interesse] == 0) {
             return 'Não foi encontrado um Empreendimento representado pelo código externo: ' + request.empreendimento_interesse;
-
-        } else if (!String.isBlank(request.canal)) {
+        }
+        
+        if (!String.isBlank(request.canal)) {
             List<Schema.PicklistEntry> canalPicklistValues = Lead.Canal__c.getDescribe().getPicklistValues();
             
             Boolean isCanalValid = false;
@@ -34,7 +36,10 @@ global class LeadRequestDTO {
             if (!isCanalValid) {
                 return 'Valor inválido para o campo canal: ' + request.canal;
             }
-
+        } 
+        
+        if (!String.isBlank(request.tipo) && request.tipo != 'LeadNortis' && request.tipo != 'LeadVibra') {
+            return 'Valor inválido para o campo tipo: ' + request.tipo;
         }
 
         return null;
@@ -58,14 +63,15 @@ global class LeadRequestDTO {
             lead.LastName = fullNameSplit.get(0);
         }
 
-        lead.Phone = this.telefone;
+        lead.MobilePhone = this.telefone;
         lead.Email = this.email;
-        lead.MidiaOrigem__c = this.midiaOrigem;
+        lead.MidiaAtual__c = this.midia;
         lead.Canal__c = this.canal;
         lead.Campanha__c = this.campanha;
-        lead.ConjuntoDeAnuncio__c = this.conjuntoDeAnuncio;
+        lead.ConjuntoDeAnuncio__c = this.conjunto_anuncio;
         lead.Anuncio__c = this.anuncio;
         lead.ResumoDoLead__c = this.resumo_lead;
+        lead.RecordTypeId = Schema.SObjectType.Lead.getRecordTypeInfosByDeveloperName().get(this.tipo).getRecordTypeId();
         
         if (!String.isBlank(this.empreendimento_interesse)) {
             lead.EmpreendimentoDeInteresse__r = new Empreendimento__c(

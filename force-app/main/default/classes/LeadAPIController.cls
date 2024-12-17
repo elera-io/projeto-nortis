@@ -30,8 +30,7 @@ global with sharing class LeadAPIController {
             }
             
             Lead leadData = leadRequest.toLead();
-            leadData.RecordTypeId = LEAD_VIBRA_RECORD_TYPE_ID;
-
+            
             insert leadData;
 
             response.statusCode = 201;
