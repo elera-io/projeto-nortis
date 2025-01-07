@@ -28,8 +28,10 @@ public class SLANotificationBatch implements Database.Batchable<SObject> {
     }
 
     public void finish(Database.BatchableContext bc) {
-        
-        System.scheduleBatch(new SLANotificationBatch(), 'SLANotificationBatch', DELAY_MINUTES);
+        if(!Test.isRunningTest()){
+
+            System.scheduleBatch(new SLANotificationBatch(), 'SLANotificationBatch', DELAY_MINUTES);
+        }
     }
 
 }

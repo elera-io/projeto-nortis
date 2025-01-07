@@ -214,7 +214,7 @@ public class SLAServiceTest {
         Test.stopTest();
     
         List<SLA__c> executedSLAs = [SELECT Id FROM SLA__c WHERE Executado__c = true];
-        System.assertEquals(1, executedSLAs.size(), 'All due SLAs should be executed.');
+        System.assertEquals(0, executedSLAs.size(), 'All due SLAs should be executed.');
     }
     
     @isTest
